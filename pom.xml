@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+  <artifactId>fitnesse-slim-rest-json-driver</artifactId>
+  <groupId>net.zesc.fitnesse.driver</groupId>
+  <version>0.1-SNAPSHOT</version>
+  <packaging>jar</packaging>
+
+  <url>https://github.com/srcordills/fitnesse-slim-rest-json-driver</url>
+
+  <properties>
+    <selenium.version>2.20.0</selenium.version>
+    <fitnesse.version>20111025</fitnesse.version>
+    <fitnesse.port>8000</fitnesse.port>
+    <fitnesse.expiration>0</fitnesse.expiration>
+    <fitnesse.regression>ProjectXebium.ExampleSuite.Example001SimpleTestsScript</fitnesse.regression>
+    <slf4j.version>1.6.2</slf4j.version>
+    <antrun-plugin.version>1.6</antrun-plugin.version>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.seleniumhq.selenium</groupId>
+      <artifactId>selenium-server</artifactId>
+      <version>${selenium.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>${slf4j.version}</version>
+    </dependency>
+
+    <!-- runtime dependencies -->
+    <dependency>
+      <groupId>org.fitnesse</groupId>
+      <artifactId>fitnesse</artifactId>
+      <version>${fitnesse.version}</version>
+      <scope>runtime</scope>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-simple</artifactId>
+      <version>${slf4j.version}</version>
+      <scope>runtime</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.fitnesse.plugins</groupId>
+      <artifactId>maven-classpath-plugin</artifactId>
+      <version>1.3</version>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- test dependencies -->
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.5</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>rhino</groupId>
+      <artifactId>js</artifactId>
+      <version>1.7R1</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-all</artifactId>
+      <version>1.8.5</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.hamcrest</groupId>
+      <artifactId>hamcrest-all</artifactId>
+      <version>1.1</version>
+      <scope>test</scope>
+    </dependency>
+
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>2.3.2</version>
+        <configuration>
+          <source>1.6</source>
+          <target>1.6</target>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+  <profiles>
+    <profile>
+      <id>fitnesse</id>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-antrun-plugin</artifactId>
+            <version>${antrun-plugin.version}</version>
+            <executions>
+              <execution>
+                <id>start-fitnesse</id>
+                <phase>test</phase>
+                <configuration>
+                  <target>
+                    <echo taskname="fitnesse" message="Starting FitNesse ${fitnesse.version}... (Selenium ${selenium.version})" />
+                    <property file="saucelabs.properties" />
+                    <!-- "Sensible" defaults -->
+                    <property name="sauce.user" value="[provide user through saucelabs.properties]" />
+                    <property name="sauce.accesskey" value="[provide accesskey through saucelabs.properties]" />
+                    <java classname="fitnesseMain.FitNesseMain" classpathref="maven.test.classpath" fork="true">
+                      <arg line="-p ${fitnesse.port}" />
+                      <arg line="-d ." />
+                      <arg line="-e ${fitnesse.expiration}" />
+                      <jvmarg value="-Dsauce.user=${sauce.user}" />
+                      <jvmarg value="-Dsauce.accesskey=${sauce.accesskey}" />
+                    </java>
+                  </target>
+                </configuration>
+                <goals>
+                  <goal>run</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>ci</id>
+
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-antrun-plugin</artifactId>
+            <version>${antrun-plugin.version}</version>
+            <executions>
+              <execution>
+                <id>start-fitnesse</id>
+                <phase>test</phase>
+                <configuration>
+                  <target>
+                    <echo taskname="fitnesse" message="Starting FitNesse ${fitnesse.version}... (Selenium ${selenium.version})" />
+                    <property file="saucelabs.properties" />
+                    <!-- "Sensible" defaults -->
+                    <property name="sauce.user" value="[provide user through saucelabs.properties]" />
+                    <property name="sauce.accesskey" value="[provide accesskey through saucelabs.properties]" />
+                    <java classname="fitnesseMain.FitNesseMain" classpathref="maven.test.classpath" fork="true" failonerror="true">
+                      <arg line="-p ${fitnesse.port}" />
+                      <arg line="-d ." /> 
+                      <arg line="-c ${fitnesse.regression}?test&amp;format=text&amp;responder=suite" />
+                      <arg line="-e ${fitnesse.expiration}" />
+                      <jvmarg value="-Dsauce.user=${sauce.user}" />
+                      <jvmarg value="-Dsauce.accesskey=${sauce.accesskey}" />
+                    </java>
+                  </target>
+                </configuration>
+                <goals>
+                  <goal>run</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+
+</project>
